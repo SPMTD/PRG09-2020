@@ -10,6 +10,8 @@ class Game {
     private gameOver:boolean = false;
     private gameState:GameState;            // current gameState (=position of king and knights)
 
+    public movesMade:number = 0;
+
     private readonly KNIGHTS: number = 4;   // number of knights
 
     private playerTurn:boolean = true;      // player has first turn 
@@ -36,23 +38,29 @@ class Game {
         this.gameState = new GameState(this.king.boardPosition, knightPos);
 
         // register input events
-        window.addEventListener("click", () => this.onWindowClick())
-        // window.addEventListener("touchend", (e) => this.onTouchStart(e as TouchEvent))
+        window.addEventListener("click", (e) => this.onWindowClick(e as MouseEvent))
+        window.addEventListener("touchend", (e) => this.onTouchStart(e as TouchEvent))
 
         // start gameloop
         this.gameLoop()
     }
 
+    // touch input
+      private onTouchStart(e : TouchEvent) {
+        let touchobj = e.changedTouches[0]
+        this.playerMove(touchobj.clientX, touchobj.clientY)
+     }
+
     // mouse input
-    private onWindowClick():void {
-        this.playerMove();
+    private onWindowClick(e:MouseEvent):void {
+        this.playerMove(e.x, e.y);
     }
 
     // move player to tile after touch/mouse input
-    private playerMove():void {
+    private playerMove(x:number, y:number):void {
         // which tile was clicked?
-        // let boardPos: [number, number] = Board.getInstance().screenToBoardPos([x, y]);
-        let boardPos: [number, number] = this.king.boardPosition;
+        let boardPos: [number, number] = Board.getInstance().screenToBoardPos([x, y]);
+        // let boardPos: [number, number] = this.king.boardPosition;
         // check if knights are still moving
         let moving = false;
         for (let go of this.knights){
@@ -65,25 +73,27 @@ class Game {
         // only respond to input during player turn when no knights are moving, and not game over
         if ((this.playerTurn) && (!moving) && (!this.gameOver)) {
             console.log(boardPos);
-            // let legalMoves: [number, number][] = this.king.getMoves();
+            let legalMoves: [number, number][] = this.king.getMoves();
 
-            GameAI.moveKing(this.king, this.knights, this.gameState);
-            this.playerTurn = false;
+            // GameAI.moveKing(this.king, this.knights, this.gameState);
+            // this.playerTurn = false;
 
             // check if requested move is a legal move
-            // for(let m of legalMoves) {
-            //     //if (Board.samePosition(m, boardPos)) {
-            //     //     console.log("legal move");
-            //     //     this.king.setPosition(boardPos);
-            //     //     this.gameState.kingPos = boardPos;
-            //     //     this.playerTurn = false;
-
-            //         // check win
-            //         if (this.gameState.getScore()[1]) {
-            //             console.log("You have won!")
-            //             this.gameOver = true;
-            //         }
-            //     }
+            for(let m of legalMoves) {
+                if (Board.samePosition(m, boardPos)) {
+                    console.log("legal move");
+                    this.movesMade += 1;
+                    this.king.setPosition(boardPos);
+                    this.gameState.kingPos = boardPos;
+                    this.playerTurn = false;
+                }
+                    // check win
+                    if (this.gameState.getScore()[0] == 100) {
+                        console.log("Gewonnen " + this.gameState.getScore()[0])
+                        console.log("You have won!")
+                        this.gameOver = true;
+                    }
+                }
         }   else {
                 console.log("Not player turn, yet");
         }
@@ -104,11 +114,14 @@ class Game {
         // AI needs to make a move if it is not the player's turn
         if (!this.playerTurn) {
             
+            this.movesMade += 1;
             GameAI.moveKnight(this.king, this.knights, this.gameState);
             this.playerTurn = true;
+            
 
             // check lose
-            if (this.gameState.getScore()[1]) {
+            if (this.gameState.getScore()[0] == -100) {
+                console.log("Verloren " + this.gameState.getScore()[0])
                 console.log("You have lost!")
                 this.gameOver = true;
             }

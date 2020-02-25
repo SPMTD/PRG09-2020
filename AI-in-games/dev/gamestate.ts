@@ -1,19 +1,24 @@
+/// <reference path="game.ts" />
+
 class GameState {
     public kingPos: [number, number];               // position of the king in the game in board coordinates
     public knightPositions: [number, number][];     // position of the knights in the game in board coordinates
-    public bestKingNoKnightMove: [number, number];
-    public bestKingKnightMove: [number, number];
-    public bestKnightNoKingMove: [number, number];
-    public bestKnightKingMove: [number, number];
+    // public bestKingNoKnightMove: [number, number];
+    // public bestKingKnightMove: [number, number];
+    // public bestKnightNoKingMove: [number, number];
+    // public bestKnightKingMove: [number, number];
 
-    public Knightpos: [number, number] = [0, 0];          // current position in screen coordinates
+    // public Knightpos: [number, number] = [0, 0];          // current position in screen coordinates
     public targetPos: [number, number] = [0, 0];          // target position in screen coordinates
     public Knightspeed: [number, number] = [2, 2];        // move speed
 
-    public Kingpos: [number, number] = [0, 0];            // current position in screen coordinates
-    public enemyPos: [number, number] = [0, 0];           // target position in screen coordinates
-    public Kingpeed: [number, number] = [2, 2];           // move speed
+    // public Kingpos: [number, number] = [0, 0];            // current position in screen coordinates
+    // public enemyPos: [number, number] = [0, 0];           // target position in screen coordinates
+    // public Kingpeed: [number, number] = [2, 2];           // move speed
 
+    // public gameStateCopy = this.copy();
+    public movesMade:number = 0;
+    
     constructor(kingPos: [number, number], knightPositions: [number, number][]) {
         this.kingPos = kingPos;
         this.knightPositions = knightPositions;
@@ -34,11 +39,12 @@ class GameState {
             return[100, true];
         } 
 
-        for (let i = 0; i < 2; i++) {
-            if (Math.abs(this.targetPos[i] - this.Knightpos[i]) <= this.Knightspeed[i]) {
-                return [-20, false];
-            }
-        }
+        //Unicorn can capture Gandalf
+        // if (Math.abs(this.targetPos[] - this.kingPos[]) <= this.Knightspeed[]) {
+        //     console.log(-20)
+        //     return [-20, false];
+        // }
+        
 
 
         // not over yet, return an evaluation of the gamestate

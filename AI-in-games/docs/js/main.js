@@ -109,12 +109,9 @@ class Board {
 }
 class GameState {
     constructor(kingPos, knightPositions) {
-        this.Knightpos = [0, 0];
         this.targetPos = [0, 0];
         this.Knightspeed = [2, 2];
-        this.Kingpos = [0, 0];
-        this.enemyPos = [0, 0];
-        this.Kingpeed = [2, 2];
+        this.movesMade = 0;
         this.kingPos = kingPos;
         this.knightPositions = knightPositions;
     }
@@ -127,11 +124,6 @@ class GameState {
         if (this.kingPos[1] == 0) {
             return [100, true];
         }
-        for (let i = 0; i < 2; i++) {
-            if (Math.abs(this.targetPos[i] - this.Knightpos[i]) <= this.Knightspeed[i]) {
-                return [-20, false];
-            }
-        }
         return [0, false];
     }
     copy() {
@@ -143,6 +135,7 @@ class Game {
     constructor() {
         this.knights = [];
         this.gameOver = false;
+        this.movesMade = 0;
         this.KNIGHTS = 4;
         this.playerTurn = true;
         Board.getInstance();
@@ -157,14 +150,19 @@ class Game {
             this.knights.push(z);
         }
         this.gameState = new GameState(this.king.boardPosition, knightPos);
-        window.addEventListener("click", () => this.onWindowClick());
+        window.addEventListener("click", (e) => this.onWindowClick(e));
+        window.addEventListener("touchend", (e) => this.onTouchStart(e));
         this.gameLoop();
     }
-    onWindowClick() {
-        this.playerMove();
+    onTouchStart(e) {
+        let touchobj = e.changedTouches[0];
+        this.playerMove(touchobj.clientX, touchobj.clientY);
     }
-    playerMove() {
-        let boardPos = this.king.boardPosition;
+    onWindowClick(e) {
+        this.playerMove(e.x, e.y);
+    }
+    playerMove(x, y) {
+        let boardPos = Board.getInstance().screenToBoardPos([x, y]);
         let moving = false;
         for (let go of this.knights) {
             if (go.moving) {
@@ -173,8 +171,21 @@ class Game {
         }
         if ((this.playerTurn) && (!moving) && (!this.gameOver)) {
             console.log(boardPos);
-            GameAI.moveKing(this.king, this.knights, this.gameState);
-            this.playerTurn = false;
+            let legalMoves = this.king.getMoves();
+            for (let m of legalMoves) {
+                if (Board.samePosition(m, boardPos)) {
+                    console.log("legal move");
+                    this.movesMade += 1;
+                    this.king.setPosition(boardPos);
+                    this.gameState.kingPos = boardPos;
+                    this.playerTurn = false;
+                }
+                if (this.gameState.getScore()[0] == 100) {
+                    console.log("Gewonnen " + this.gameState.getScore()[0]);
+                    console.log("You have won!");
+                    this.gameOver = true;
+                }
+            }
         }
         else {
             console.log("Not player turn, yet");
@@ -186,9 +197,11 @@ class Game {
             go.update();
         }
         if (!this.playerTurn) {
+            this.movesMade += 1;
             GameAI.moveKnight(this.king, this.knights, this.gameState);
             this.playerTurn = true;
-            if (this.gameState.getScore()[1]) {
+            if (this.gameState.getScore()[0] == -100) {
+                console.log("Verloren " + this.gameState.getScore()[0]);
                 console.log("You have lost!");
                 this.gameOver = true;
             }
@@ -240,33 +253,18 @@ class GameAI {
         console.log(king);
         let i = Math.floor(Math.random() * Math.floor(knights.length));
         let legalMovesKnight = knights[i].getMoves();
-        console.log(legalMovesKnight);
         let j = Math.floor(Math.random() * Math.floor(legalMovesKnight.length));
         knights[i].setPosition(legalMovesKnight[j]);
         gameState.knightPositions[i] = legalMovesKnight[j];
+        console.log(gameState.knightPositions);
+        for (let i = 0; i < knights.length; i++) {
+            this.minimax(gameState.knightPositions[i], 1, false, i);
+        }
         let t1 = performance.now();
         console.log("Knight AI move took " + (t1 - t0) + " milliseconds.");
     }
-    static moveKing(king, knights, gameState) {
-        let t0 = performance.now();
-        console.log(knights);
-        let legalMovesKing = king.getMoves();
-        console.log(legalMovesKing);
-        let j = Math.floor(Math.random() * Math.floor(legalMovesKing.length));
-        king.setPosition(legalMovesKing[j]);
-        gameState.kingPos = legalMovesKing[j];
-        this.minimax(king.boardPosition, 0, true);
-        let t1 = performance.now();
-        console.log("King AI move took " + (t1 - t0) + " milliseconds.");
-    }
-    static evaluate(board_size) {
-        console.log("board_size = " + board_size);
-        console.log("kingPos = " + King.prototype.boardPosition, "knightPositions = " + Knight.prototype.boardPosition);
-    }
-    static minimax(position, depth, maximizingPlayer) {
-        let score = this.evaluate([7, 7]);
-        console.log(score);
-        console.log(position, depth, maximizingPlayer, "avoiding errors");
+    static minimax(position, depth, maximizingPlayer, i) {
+        console.log(position, depth, maximizingPlayer, i, "avoiding errors");
     }
 }
 //# sourceMappingURL=main.js.map

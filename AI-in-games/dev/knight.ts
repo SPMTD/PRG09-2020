@@ -6,8 +6,8 @@ class Knight extends ChessPiece {
 
     public getMoves(from:[number, number] = this.boardPosition): [number, number][] {
         let moves: [number, number][] = [];
-        let killMoves: [number, number][] = [];
-
+        // let killMoves: [number, number][] = [];
+        
         for (let i = -2; i < 3; i++) {
             for (let j = -2; j < 3; j++) {
                 if ((Math.abs(i) == Math.abs(j)) || (i==0) || (j==0)) {
